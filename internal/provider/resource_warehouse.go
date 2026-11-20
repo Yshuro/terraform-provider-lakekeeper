@@ -173,7 +173,11 @@ func (r *lakekeeperWarehouseResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	projectID, warehouseID := splitInternalID(state.ID)
+	projectID, warehouseID, err := splitInternalID(state.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid resource ID", err.Error())
+		return
+	}
 	wh, err := r.client.GetWarehouse(ctx, projectID, warehouseID)
 	if err != nil {
 		if api.IsNotFound(err) {
@@ -224,7 +228,11 @@ func (r *lakekeeperWarehouseResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	projectID, warehouseID := splitInternalID(state.ID)
+	projectID, warehouseID, err := splitInternalID(state.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid resource ID", err.Error())
+		return
+	}
 
 	if plan.Active.ValueBool() {
 		if err := r.client.ActivateWarehouse(ctx, projectID, warehouseID); err != nil {
@@ -315,7 +323,11 @@ func (r *lakekeeperWarehouseResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	projectID, warehouseID := splitInternalID(state.ID)
+	projectID, warehouseID, err := splitInternalID(state.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid resource ID", err.Error())
+		return
+	}
 
 	// force is not sent: the API's force flag deletes the warehouse even when it
 	// is protected, which would defeat the `protected` attribute. A protected

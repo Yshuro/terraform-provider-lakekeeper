@@ -225,7 +225,10 @@ func TestAccLakekeeperWarehouseUserAssignment_scopeDisappears(t *testing.T) {
 					}
 				`, user.ID),
 				Check: testAccDeleteOutOfBand("lakekeeper_warehouse.this", func(ctx context.Context, id string) error {
-					projectID, warehouseID := splitInternalID(types.StringValue(id))
+					projectID, warehouseID, err := splitInternalID(types.StringValue(id))
+					if err != nil {
+						return err
+					}
 					return testutil.TestLakekeeperClient.DeleteWarehouse(ctx, projectID, warehouseID, false)
 				}),
 				ExpectNonEmptyPlan: true,

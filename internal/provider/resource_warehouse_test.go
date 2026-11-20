@@ -711,7 +711,10 @@ func TestAccLakekeeperWarehouse_disappears(t *testing.T) {
 			{
 				Config: testAccWarehouseConfig(rName, project.ID, false),
 				Check: testAccDeleteOutOfBand("lakekeeper_warehouse.this", func(ctx context.Context, id string) error {
-					projectID, warehouseID := splitInternalID(types.StringValue(id))
+					projectID, warehouseID, err := splitInternalID(types.StringValue(id))
+					if err != nil {
+						return err
+					}
 					return testutil.TestLakekeeperClient.DeleteWarehouse(ctx, projectID, warehouseID, false)
 				}),
 				ExpectNonEmptyPlan: true,
@@ -755,7 +758,10 @@ func testAccCheckLakekeeperWarehouseDestroy(s *terraform.State) error {
 			continue
 		}
 
-		projectID, warehouseID := splitInternalID(types.StringValue(rs.Primary.ID))
+		projectID, warehouseID, err := splitInternalID(types.StringValue(rs.Primary.ID))
+		if err != nil {
+			return err
+		}
 		if _, err := testutil.TestLakekeeperClient.GetWarehouse(context.Background(), projectID, warehouseID); err == nil {
 			return fmt.Errorf("Warehouse with id %s still exists", rs.Primary.ID)
 		}
