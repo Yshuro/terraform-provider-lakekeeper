@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/lakekeeper/terraform-provider-lakekeeper/internal/provider/api"
 	"github.com/lakekeeper/terraform-provider-lakekeeper/internal/provider/warehouse"
@@ -343,17 +342,17 @@ func (r *lakekeeperWarehouseResource) Delete(ctx context.Context, req resource.D
 // ImportState imports the resource into the Terraform state.
 func (r *lakekeeperWarehouseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Expected format: "project_id/warehouse_id"
-	parts := strings.Split(req.ID, "/")
-	if len(parts) != 2 {
+	projectID, warehouseID, err := splitInternalID(types.StringValue(req.ID))
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid import ID format",
-			"Expected format: project_id/warehouse_id",
+			err.Error(),
 		)
 		return
 	}
 
-	resp.State.SetAttribute(ctx, path.Root("project_id"), parts[0])
-	resp.State.SetAttribute(ctx, path.Root("warehouse_id"), parts[1])
+	resp.State.SetAttribute(ctx, path.Root("project_id"), projectID)
+	resp.State.SetAttribute(ctx, path.Root("warehouse_id"), warehouseID)
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

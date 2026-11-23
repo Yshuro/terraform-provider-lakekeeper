@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -272,17 +271,17 @@ func (r *lakekeeperRoleResource) Delete(ctx context.Context, req resource.Delete
 // ImportState imports the resource into the Terraform state.
 func (r *lakekeeperRoleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Expected format: "project_id/role_id"
-	parts := strings.Split(req.ID, "/")
-	if len(parts) != 2 {
+	projectID, roleID, err := splitInternalID(types.StringValue(req.ID))
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid import ID format",
-			"Expected format: project_id/role_id",
+			err.Error(),
 		)
 		return
 	}
 
-	resp.State.SetAttribute(ctx, path.Root("project_id"), parts[0])
-	resp.State.SetAttribute(ctx, path.Root("role_id"), parts[1])
+	resp.State.SetAttribute(ctx, path.Root("project_id"), projectID)
+	resp.State.SetAttribute(ctx, path.Root("role_id"), roleID)
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
