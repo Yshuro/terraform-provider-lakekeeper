@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -161,7 +160,11 @@ func (r *lakekeeperRoleResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	projectID, roleID := splitInternalID(state.ID)
+	projectID, roleID, err := splitInternalID(state.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid resource ID", err.Error())
+		return
+	}
 
 	role, err := r.client.GetRole(ctx, projectID, roleID)
 	if err != nil {
@@ -207,7 +210,11 @@ func (r *lakekeeperRoleResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	projectID, roleID := splitInternalID(state.ID)
+	projectID, roleID, err := splitInternalID(state.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid resource ID", err.Error())
+		return
+	}
 
 	role, err := r.client.UpdateRole(ctx, projectID, roleID, api.RoleRequest{
 		Name:        plan.Name.ValueString(),
@@ -246,9 +253,13 @@ func (r *lakekeeperRoleResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	projectID, roleID := splitInternalID(state.ID)
+	projectID, roleID, err := splitInternalID(state.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid resource ID", err.Error())
+		return
+	}
 
-	err := r.client.DeleteRole(ctx, projectID, roleID)
+	err = r.client.DeleteRole(ctx, projectID, roleID)
 	if err != nil && !api.IsNotFound(err) {
 		resp.Diagnostics.AddError("Lakekeeper API error occurred", fmt.Sprintf("Unable to delete role %s in project %s, %v", roleID, projectID, err))
 		return
@@ -260,17 +271,17 @@ func (r *lakekeeperRoleResource) Delete(ctx context.Context, req resource.Delete
 // ImportState imports the resource into the Terraform state.
 func (r *lakekeeperRoleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Expected format: "project_id/role_id"
-	parts := strings.Split(req.ID, "/")
-	if len(parts) != 2 {
+	projectID, roleID, err := splitInternalID(types.StringValue(req.ID))
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid import ID format",
-			"Expected format: project_id/role_id",
+			err.Error(),
 		)
 		return
 	}
 
-	resp.State.SetAttribute(ctx, path.Root("project_id"), parts[0])
-	resp.State.SetAttribute(ctx, path.Root("role_id"), parts[1])
+	resp.State.SetAttribute(ctx, path.Root("project_id"), projectID)
+	resp.State.SetAttribute(ctx, path.Root("role_id"), roleID)
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

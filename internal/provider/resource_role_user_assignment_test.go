@@ -227,7 +227,10 @@ func TestAccLakekeeperRoleUserAssignment_scopeDisappears(t *testing.T) {
 					}
 				`, rName, project.ID, assignee.ID),
 				Check: testAccDeleteOutOfBand("lakekeeper_role.scope", func(ctx context.Context, id string) error {
-					projectID, roleID := splitInternalID(types.StringValue(id))
+					projectID, roleID, err := splitInternalID(types.StringValue(id))
+					if err != nil {
+						return err
+					}
 					return testutil.TestLakekeeperClient.DeleteRole(ctx, projectID, roleID)
 				}),
 				ExpectNonEmptyPlan: true,

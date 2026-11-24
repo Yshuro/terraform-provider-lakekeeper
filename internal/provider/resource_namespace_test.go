@@ -198,7 +198,10 @@ func TestAccLakekeeperNamespace_warehouseDisappears(t *testing.T) {
 				}
 				`, project.ID, rName),
 				Check: testAccDeleteOutOfBand("lakekeeper_warehouse.this", func(ctx context.Context, id string) error {
-					projectID, warehouseID := splitInternalID(types.StringValue(id))
+					projectID, warehouseID, err := splitInternalID(types.StringValue(id))
+					if err != nil {
+						return err
+					}
 					if err := testAccDropNamespace(ctx, projectID, rName, rName); err != nil {
 						return err
 					}

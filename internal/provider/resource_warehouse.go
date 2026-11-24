@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/lakekeeper/terraform-provider-lakekeeper/internal/provider/api"
 	"github.com/lakekeeper/terraform-provider-lakekeeper/internal/provider/warehouse"
@@ -173,7 +172,11 @@ func (r *lakekeeperWarehouseResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	projectID, warehouseID := splitInternalID(state.ID)
+	projectID, warehouseID, err := splitInternalID(state.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid resource ID", err.Error())
+		return
+	}
 	wh, err := r.client.GetWarehouse(ctx, projectID, warehouseID)
 	if err != nil {
 		if api.IsNotFound(err) {
@@ -224,7 +227,11 @@ func (r *lakekeeperWarehouseResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	projectID, warehouseID := splitInternalID(state.ID)
+	projectID, warehouseID, err := splitInternalID(state.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid resource ID", err.Error())
+		return
+	}
 
 	if plan.Active.ValueBool() {
 		if err := r.client.ActivateWarehouse(ctx, projectID, warehouseID); err != nil {
@@ -315,7 +322,11 @@ func (r *lakekeeperWarehouseResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	projectID, warehouseID := splitInternalID(state.ID)
+	projectID, warehouseID, err := splitInternalID(state.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid resource ID", err.Error())
+		return
+	}
 
 	// force is not sent: the API's force flag deletes the warehouse even when it
 	// is protected, which would defeat the `protected` attribute. A protected
@@ -331,17 +342,17 @@ func (r *lakekeeperWarehouseResource) Delete(ctx context.Context, req resource.D
 // ImportState imports the resource into the Terraform state.
 func (r *lakekeeperWarehouseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Expected format: "project_id/warehouse_id"
-	parts := strings.Split(req.ID, "/")
-	if len(parts) != 2 {
+	projectID, warehouseID, err := splitInternalID(types.StringValue(req.ID))
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid import ID format",
-			"Expected format: project_id/warehouse_id",
+			err.Error(),
 		)
 		return
 	}
 
-	resp.State.SetAttribute(ctx, path.Root("project_id"), parts[0])
-	resp.State.SetAttribute(ctx, path.Root("warehouse_id"), parts[1])
+	resp.State.SetAttribute(ctx, path.Root("project_id"), projectID)
+	resp.State.SetAttribute(ctx, path.Root("warehouse_id"), warehouseID)
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -202,7 +202,10 @@ func TestAccLakekeeperRole_disappears(t *testing.T) {
 				}
 				`, rName),
 				Check: testAccDeleteOutOfBand("lakekeeper_role.foo", func(ctx context.Context, id string) error {
-					projectID, roleID := splitInternalID(types.StringValue(id))
+					projectID, roleID, err := splitInternalID(types.StringValue(id))
+					if err != nil {
+						return err
+					}
 					return testutil.TestLakekeeperClient.DeleteRole(ctx, projectID, roleID)
 				}),
 				ExpectNonEmptyPlan: true,
@@ -253,9 +256,12 @@ func testAccCheckLakekeeperRoleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		projectID, roleID := splitInternalID(types.StringValue(rs.Primary.ID))
+		projectID, roleID, err := splitInternalID(types.StringValue(rs.Primary.ID))
+		if err != nil {
+			return err
+		}
 
-		_, err := testutil.TestLakekeeperClient.GetRole(context.Background(), projectID, roleID)
+		_, err = testutil.TestLakekeeperClient.GetRole(context.Background(), projectID, roleID)
 		if err == nil {
 			return fmt.Errorf("Role with id %s still exists", rs.Primary.ID)
 		}
