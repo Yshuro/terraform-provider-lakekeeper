@@ -399,20 +399,32 @@ func wrapTagListCall(op string, res *managementv1.ListTagsResponse, resp *http.R
 }
 
 // SetWarehouseTag attaches or updates tagName on warehouseID.
-func (c *Client) SetWarehouseTag(ctx context.Context, warehouseID, tagName string, value *string) (*AppliedTag, error) {
-	tag, resp, err := c.sdk.TagAPI.SetWarehouseTag(ctx, warehouseID, tagName).SetTagRequest(buildSetTagRequest(value)).Execute()
+func (c *Client) SetWarehouseTag(ctx context.Context, projectID, warehouseID, tagName string, value *string) (*AppliedTag, error) {
+	r := c.sdk.TagAPI.SetWarehouseTag(ctx, warehouseID, tagName).SetTagRequest(buildSetTagRequest(value))
+	if projectID != "" {
+		r = r.XProjectId(projectID)
+	}
+	tag, resp, err := r.Execute()
 	return wrapTagCall("set warehouse tag", tag, resp, err)
 }
 
 // ListWarehouseTags lists tags on warehouseID.
-func (c *Client) ListWarehouseTags(ctx context.Context, warehouseID string, effective bool) ([]TargetTag, error) {
-	res, resp, err := c.sdk.TagAPI.ListWarehouseTags(ctx, warehouseID).Effective(effective).Execute()
+func (c *Client) ListWarehouseTags(ctx context.Context, projectID, warehouseID string, effective bool) ([]TargetTag, error) {
+	r := c.sdk.TagAPI.ListWarehouseTags(ctx, warehouseID).Effective(effective)
+	if projectID != "" {
+		r = r.XProjectId(projectID)
+	}
+	res, resp, err := r.Execute()
 	return wrapTagListCall("list warehouse tags", res, resp, err)
 }
 
 // DeleteWarehouseTag removes tagName from warehouseID.
-func (c *Client) DeleteWarehouseTag(ctx context.Context, warehouseID, tagName string) error {
-	resp, err := c.sdk.TagAPI.DeleteWarehouseTag(ctx, warehouseID, tagName).Execute()
+func (c *Client) DeleteWarehouseTag(ctx context.Context, projectID, warehouseID, tagName string) error {
+	r := c.sdk.TagAPI.DeleteWarehouseTag(ctx, warehouseID, tagName)
+	if projectID != "" {
+		r = r.XProjectId(projectID)
+	}
+	resp, err := r.Execute()
 	return wrapGenErr("delete warehouse tag", resp, err)
 }
 

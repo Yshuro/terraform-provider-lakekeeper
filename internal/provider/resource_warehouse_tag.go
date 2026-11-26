@@ -28,16 +28,17 @@ func NewLakekeeperWarehouseTagResource() resource.Resource {
 		TargetNoun:   "warehouse",
 		OperationDoc: "set_warehouse_tag",
 		Parents: []tags.ParentAttr{
+			{Name: "project_id", Description: "The UUID of the project."},
 			{Name: "warehouse_id", Description: "The UUID of the warehouse."},
 		},
 		Set: func(ctx context.Context, client *api.Client, parents []string, tagName string, value *string) (*api.AppliedTag, error) {
-			return client.SetWarehouseTag(ctx, parents[0], tagName, value)
+			return client.SetWarehouseTag(ctx, parents[0], parents[1], tagName, value)
 		},
 		List: func(ctx context.Context, client *api.Client, parents []string) ([]api.TargetTag, error) {
-			return client.ListWarehouseTags(ctx, parents[0], false)
+			return client.ListWarehouseTags(ctx, parents[0], parents[1], false)
 		},
 		Delete: func(ctx context.Context, client *api.Client, parents []string, tagName string) error {
-			return client.DeleteWarehouseTag(ctx, parents[0], tagName)
+			return client.DeleteWarehouseTag(ctx, parents[0], parents[1], tagName)
 		},
 	}, extractResourceClient)
 }

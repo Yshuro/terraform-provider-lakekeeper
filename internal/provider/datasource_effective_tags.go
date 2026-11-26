@@ -142,7 +142,7 @@ func (d *lakekeeperEffectiveTagsDataSource) Read(ctx context.Context, req dataso
 	var err error
 	switch targetType {
 	case api.TagScopeWarehouse:
-		tags, err = d.client.ListWarehouseTags(ctx, warehouseID, true)
+		tags, err = d.client.ListWarehouseTags(ctx, "", warehouseID, true)
 	case api.TagScopeNamespace:
 		tags, err = d.client.ListNamespaceTags(ctx, warehouseID, targetID, true)
 	case api.TagScopeTable:

@@ -35,11 +35,12 @@ resource "lakekeeper_tag_definition" "env" {
 }
 
 resource "lakekeeper_warehouse_tag" "foo" {
+  project_id   = %q
   warehouse_id = %q
   tag_name     = lakekeeper_tag_definition.env.name
   value        = "staging"
 }
-`, project.ID, tagName, warehouse.ID),
+`, project.ID, tagName, project.ID, warehouse.ID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("lakekeeper_warehouse_tag.foo", "warehouse_id", warehouse.ID),
 					resource.TestCheckResourceAttr("lakekeeper_warehouse_tag.foo", "tag_name", tagName),
@@ -63,11 +64,12 @@ resource "lakekeeper_tag_definition" "env" {
 }
 
 resource "lakekeeper_warehouse_tag" "foo" {
+  project_id   = %q
   warehouse_id = %q
   tag_name     = lakekeeper_tag_definition.env.name
   value        = "production"
 }
-`, project.ID, tagName, warehouse.ID),
+`, project.ID, tagName, project.ID, warehouse.ID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("lakekeeper_warehouse_tag.foo", "value", "production"),
 				),
@@ -81,11 +83,11 @@ func testAccCheckLakekeeperWarehouseTagDestroy(s *terraform.State) error {
 		if rs.Type != "lakekeeper_warehouse_tag" {
 			continue
 		}
-		parts := strings.SplitN(rs.Primary.ID, "/", 2)
-		if len(parts) != 2 {
+		parts := strings.SplitN(rs.Primary.ID, "/", 3)
+		if len(parts) != 3 {
 			continue
 		}
-		tags, err := testutil.TestLakekeeperClient.ListWarehouseTags(context.Background(), parts[0], false)
+		tags, err := testutil.TestLakekeeperClient.ListWarehouseTags(context.Background(), parts[0], parts[1], false)
 		if err != nil {
 			if api.IsNotFound(err) {
 				continue
@@ -93,7 +95,7 @@ func testAccCheckLakekeeperWarehouseTagDestroy(s *terraform.State) error {
 			return err
 		}
 		for _, tag := range tags {
-			if strings.EqualFold(tag.Name, parts[1]) {
+			if strings.EqualFold(tag.Name, parts[2]) {
 				return fmt.Errorf("warehouse tag %s still exists", rs.Primary.ID)
 			}
 		}
