@@ -20,6 +20,7 @@ The `lakekeeper_warehouse_tag` resource attaches a governance tag to a Lakekeepe
 
 ```terraform
 resource "lakekeeper_warehouse_tag" "env" {
+  project_id   = "891d18c8-1da4-471e-89f1-6e43eb4dcb38"
   warehouse_id = "261bd4e4-5c57-4707-96ad-44128f9038c0"
   tag_name     = "environment"
   value        = "production"
@@ -31,6 +32,7 @@ resource "lakekeeper_warehouse_tag" "env" {
 
 ### Required
 
+- `project_id` (String) The UUID of the project. Changing this forces a new resource to be created.
 - `tag_name` (String) The name of the tag definition to attach. Changing this forces a new resource to be created.
 - `warehouse_id` (String) The UUID of the warehouse. Changing this forces a new resource to be created.
 
@@ -41,7 +43,7 @@ resource "lakekeeper_warehouse_tag" "env" {
 ### Read-Only
 
 - `applied_at` (String) Timestamp when the tag was applied or last updated.
-- `id` (String) The ID of the tag attachment, in the form `{{warehouse_id}}/{{tag_name}}`.
+- `id` (String) The ID of the tag attachment, in the form `{{project_id}}/{{warehouse_id}}/{{tag_name}}`.
 - `tag_definition_id` (String) The UUID of the attached tag definition.
 
 ## Import
@@ -51,6 +53,6 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-# id is "{{warehouse_id}}/{{tag_name}}"
-terraform import lakekeeper_warehouse_tag.env "261bd4e4-5c57-4707-96ad-44128f9038c0/environment"
+# id is "{{project_id}}/{{warehouse_id}}/{{tag_name}}"
+terraform import lakekeeper_warehouse_tag.env "891d18c8-1da4-471e-89f1-6e43eb4dcb38/261bd4e4-5c57-4707-96ad-44128f9038c0/environment"
 ```
