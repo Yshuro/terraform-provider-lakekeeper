@@ -31,6 +31,7 @@ type lakekeeperEffectiveTagsDataSource struct {
 }
 
 type lakekeeperEffectiveTagsDataSourceModel struct {
+	ProjectID   types.String                       `tfsdk:"project_id"`
 	WarehouseID types.String                       `tfsdk:"warehouse_id"`
 	TargetType  types.String                       `tfsdk:"target_type"`
 	TargetID    types.String                       `tfsdk:"target_id"`
@@ -62,6 +63,10 @@ func (d *lakekeeperEffectiveTagsDataSource) Schema(_ context.Context, _ datasour
 
 **Upstream API**: [Lakekeeper REST API docs](https://docs.lakekeeper.io/docs/nightly/api/management/#tag/tag)`,
 		Attributes: map[string]schema.Attribute{
+			"project_id": schema.StringAttribute{
+				MarkdownDescription: "The UUID of the project. Used when `target_type` is `warehouse`.",
+				Optional:            true,
+			},
 			"warehouse_id": schema.StringAttribute{
 				MarkdownDescription: "The UUID of the warehouse.",
 				Required:            true,
@@ -124,6 +129,7 @@ func (d *lakekeeperEffectiveTagsDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
+	projectID := state.ProjectID.ValueString()
 	warehouseID := state.WarehouseID.ValueString()
 	targetType := state.TargetType.ValueString()
 	targetID := state.TargetID.ValueString()
@@ -142,7 +148,7 @@ func (d *lakekeeperEffectiveTagsDataSource) Read(ctx context.Context, req dataso
 	var err error
 	switch targetType {
 	case api.TagScopeWarehouse:
-		tags, err = d.client.ListWarehouseTags(ctx, "", warehouseID, true)
+		tags, err = d.client.ListWarehouseTags(ctx, projectID, warehouseID, true)
 	case api.TagScopeNamespace:
 		tags, err = d.client.ListNamespaceTags(ctx, warehouseID, targetID, true)
 	case api.TagScopeTable:

@@ -51,11 +51,12 @@ data "lakekeeper_tag_attachments" "att" {
 }
 
 data "lakekeeper_effective_tags" "eff" {
+  project_id   = %q
   warehouse_id = %q
   target_type  = "warehouse"
   depends_on   = [lakekeeper_warehouse_tag.wh]
 }
-`, project.ID, tagName, project.ID, warehouse.ID, project.ID, project.ID, project.ID, warehouse.ID),
+`, project.ID, tagName, project.ID, warehouse.ID, project.ID, project.ID, project.ID, project.ID, warehouse.ID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair("data.lakekeeper_tag_definition.by_name", "tag_definition_id", "lakekeeper_tag_definition.tag", "tag_definition_id"),
 					resource.TestCheckResourceAttr("data.lakekeeper_tag_definitions.all", "definitions.#", "1"),
